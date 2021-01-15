@@ -4,10 +4,10 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 import {Request, Response} from "express";
 import {Routes} from "./routes";
-import {User} from "./entity/User";
 import {UserController} from "./controller/UserController";
+import {TaskController} from "./controller/TaskController";
 
-createConnection().then(async connection => {
+createConnection().then(async () => {
 
     // create express app
     const app = express();
@@ -15,35 +15,32 @@ createConnection().then(async connection => {
 
     // register express routes from defined application routes
     Routes.forEach(route => {
-        (app as any)[route.method](route.route, (req: Request, res: Response, next: Function) => {
-            const result = (new (route.controller as any))[route.action](req, res, next);
+        (app as any)[route.method](route.route, (request: Request, response: Response, next: Function) => {
+            const result = (new (route.controller as any))[route.action](request, response, next);
             if (result instanceof Promise) {
-                result.then(result => result !== null && result !== undefined ? res.send(result) : undefined);
-
-            } else if (result !== null && result !== undefined) {
-                res.json(result);
+                result
+                    .then(result => result !== null && result !== undefined ? response.send(result) : undefined)
+                    .catch(error => response.send(error));
             }
         });
     });
 
     const userController = new UserController;
-
+    const taskController = new TaskController;
 
     app.get('/users', userController.getAll);
+    app.get('/users/:id', userController.getById);
+    app.post('/users', userController.create);
+    app.delete('/users/:id', userController.remove);
 
+    app.get('/tasks', taskController.getAll);
+    app.get('/users/:id/tasks', taskController.getAllTasksByUserId);
+    app.get('/tasks/:id', taskController.getById);
+    app.post('/tasks', taskController.create);
+    app.delete('/tasks/:id', taskController.remove);
 
     // start express server
     app.listen(3000);
-
-    // insert new users for test
-    await connection.manager.save(connection.manager.create(User, {
-        firstName: "Andrew",
-        lastName: "K"
-    }));
-    await connection.manager.save(connection.manager.create(User, {
-        firstName: "Dimon",
-        lastName: "H"
-    }));
 
     console.log("Express server has started on port 3000. Open http://localhost:3000/users to see results");
 

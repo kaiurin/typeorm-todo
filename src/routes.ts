@@ -15,7 +15,7 @@ export const Routes = [{
     method: "post",
     route: "/users",
     controller: UserController,
-    action: "save"
+    action: "create"
 }, {
     method: "delete",
     route: "/users/:id",
@@ -35,12 +35,12 @@ export const Routes = [{
     method: "get",
     route: "/user/:id/tasks",
     controller: TaskController,
-    action: "getByUserId"
+    action: "getAllTasksByUserId"
 }, {
     method: "post",
     route: "/tasks",
     controller: TaskController,
-    action: "save"
+    action: "create"
 }, {
     method: "delete",
     route: "/tasks/:id",

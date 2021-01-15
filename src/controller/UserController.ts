@@ -1,25 +1,44 @@
-import {getRepository} from "typeorm";
 import {NextFunction, Request, Response} from "express";
-import {User} from "../entity/User";
+import * as interfaces from "../interfaces/User";
+import {UserService} from "../service/UserService";
 
-export class UserController {
 
-    private userRepository = getRepository(User);
+export class UserController implements interfaces.IUserController{
+    private userService = new UserService;
 
-    async getAll(request: Request, response: Response, next: NextFunction) {
-        return this.userRepository.find();
+    async getAll(request: Request, response: Response, next: NextFunction):Promise<interfaces.IUser[]> {
+        try {
+            return this.userService.getAll();
+        } catch (e) {
+            return e
+        }
     }
 
-    async getById(request: Request, response: Response, next: NextFunction) {
-        return this.userRepository.findOne(request.params.id);
+    async getById(request: Request, response: Response, next: NextFunction):Promise<interfaces.IUser> {
+        try {
+            return this.userService.getById(request.params.id);
+        } catch (e) {
+            return e
+        }
     }
 
-    async save(request: Request, response: Response, next: NextFunction) {
-        return this.userRepository.save(request.body);
+    async create(request: Request, response: Response, next: NextFunction): Promise<interfaces.IUserPayload> {
+        const body: interfaces.IUserPayload = request.body;
+
+        if(!body.lastName || !body.firstName) return response.status(400).send('Bad Request');
+
+        return this.userService.create({
+            lastName: body.lastName,
+            firstName: body.firstName
+        });
     }
 
-    async remove(request: Request, response: Response, next: NextFunction) {
-        let userToRemove = await this.userRepository.findOne(request.params.id);
-        await this.userRepository.remove(userToRemove);
+    async remove(request: Request, response: Response, next: NextFunction):Promise<string> {
+        try {
+            await this.userService.remove(request.params.id);
+            return 'User successfully delete!';
+        } catch (e) {
+            return e
+        }
     }
 }
